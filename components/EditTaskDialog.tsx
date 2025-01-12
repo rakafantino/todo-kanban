@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,11 +31,7 @@ export function EditTaskDialog({ task, trigger, onTaskUpdated }: EditTaskDialogP
   const [labels, setLabels] = useState<Array<{ id: string; name: string; color?: string | null }>>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadLabels();
-  }, [loadLabels]);
-
-  const loadLabels = async () => {
+  const loadLabels = useCallback(async () => {
     const { labels: fetchedLabels, error } = await getLabels();
     if (error) {
       toast({
@@ -46,7 +42,11 @@ export function EditTaskDialog({ task, trigger, onTaskUpdated }: EditTaskDialogP
     } else {
       setLabels(fetchedLabels);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadLabels();
+  }, [loadLabels]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

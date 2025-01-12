@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragEndEvent } from "@dnd-kit/core";
-import { arrayMove, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import Header from "./Header";
 import Column from "./Column";
 import TaskCard from "./TaskCard";
-import { getTasks, updateTaskStatus, reorderTasks } from "../app/actions";
+import { getTasks, reorderTasks } from "../app/actions";
 import { Status, Task } from "@/types/task";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
@@ -18,21 +18,6 @@ export default function KanbanBoard() {
   const [activeFilters, setActiveFilters] = useState<Status[]>([]);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const { toast } = useToast();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // 8px minimal drag distance
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
 
   const loadTasks = useCallback(async () => {
     try {
@@ -60,6 +45,21 @@ export default function KanbanBoard() {
       setLoading(false);
     }
   }, [toast]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
