@@ -4,22 +4,19 @@ export enum Status {
   DONE = "DONE",
 }
 
-export interface Label {
-  id: string;
-  name: string;
-  description?: string | null;
-  color?: string | null;
-}
-
 export interface Task {
   id: string;
   title: string;
   description: string | null;
   status: Status;
   priority: number;
-  dueDate: Date | null;
   order: number;
-  labels: Label[];
   createdAt: Date;
   updatedAt: Date;
+  dueDate: Date | null;
+  labels: Array<{
+    id: string;
+    name: string;
+    color: string | null;
+  }>;
 }

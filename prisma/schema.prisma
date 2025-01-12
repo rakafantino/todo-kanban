@@ -21,13 +21,13 @@ model Task {
   id          String    @id @default(cuid())
   title       String
   description String?
-  status      Status    @default(TODO)
-  priority    Int       @default(4)
+  status      Status   @default(TODO)
+  priority    Int      @default(4)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   dueDate     DateTime?
-  order       Int       @default(0)
   labels      Label[]   @relation("TaskLabels")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
 }
 
 enum Status {

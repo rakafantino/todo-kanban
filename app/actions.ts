@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { Status, Task } from "@/types/task";
+import { Status } from "@/types/task";
 import { Prisma } from "@prisma/client";
 
 interface ActionResponse {
@@ -37,10 +37,23 @@ export async function getTasks(): Promise<TasksResponse> {
       orderBy: [{ order: "asc" }, { createdAt: "desc" }],
     });
 
+    const mapStatus = (status: string): Status => {
+      switch (status) {
+        case "TODO":
+          return Status.TODO;
+        case "IN_PROGRESS":
+          return Status.IN_PROGRESS;
+        case "DONE":
+          return Status.DONE;
+        default:
+          return Status.TODO;
+      }
+    };
+
     const columns = {
-      todo: tasks.filter((task: Task) => task.status === "TODO"),
-      inprogress: tasks.filter((task: Task) => task.status === "IN_PROGRESS"),
-      done: tasks.filter((task: Task) => task.status === "DONE"),
+      todo: tasks.filter((task) => mapStatus(task.status) === Status.TODO),
+      inprogress: tasks.filter((task) => mapStatus(task.status) === Status.IN_PROGRESS),
+      done: tasks.filter((task) => mapStatus(task.status) === Status.DONE),
     };
 
     return { columns, error: null };
