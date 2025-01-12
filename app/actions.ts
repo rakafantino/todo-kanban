@@ -3,7 +3,34 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Status, Task } from "@/types/task";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+
+// Perbaiki definisi tipe untuk mencakup semua field yang dibutuhkan
+type PrismaTask = Prisma.TaskGetPayload<{
+  select: {
+    id: true;
+    title: true;
+    description: true;
+    status: true;
+    priority: true;
+    order: true;
+    createdAt: true;
+    updatedAt: true;
+    dueDate: true;
+  };
+}>;
+
+type PrismaLabel = Prisma.LabelGetPayload<{
+  select: {
+    id: true;
+    name: true;
+    color: true;
+  };
+}>;
+
+type TaskWithLabels = Prisma.TaskGetPayload<{
+  include: { labels: true };
+}>;
 
 interface ActionResponse {
   success: boolean;
@@ -37,23 +64,29 @@ export async function getTasks(): Promise<TasksResponse> {
       orderBy: [{ order: "asc" }, { createdAt: "desc" }],
     });
 
-    const mapStatus = (status: string): Status => {
-      switch (status) {
-        case "TODO":
-          return Status.TODO;
-        case "IN_PROGRESS":
-          return Status.IN_PROGRESS;
-        case "DONE":
-          return Status.DONE;
-        default:
-          return Status.TODO;
-      }
-    };
+    const convertedTasks = tasks.map(
+      (prismaTask: TaskWithLabels): Task => ({
+        id: prismaTask.id,
+        title: prismaTask.title,
+        description: prismaTask.description,
+        status: prismaTask.status as Status,
+        priority: prismaTask.priority,
+        order: prismaTask.order,
+        createdAt: prismaTask.createdAt,
+        updatedAt: prismaTask.updatedAt,
+        dueDate: prismaTask.dueDate,
+        labels: prismaTask.labels.map((label: PrismaLabel) => ({
+          id: label.id,
+          name: label.name,
+          color: label.color,
+        })),
+      })
+    );
 
     const columns = {
-      todo: tasks.filter((task) => mapStatus(task.status) === Status.TODO),
-      inprogress: tasks.filter((task) => mapStatus(task.status) === Status.IN_PROGRESS),
-      done: tasks.filter((task) => mapStatus(task.status) === Status.DONE),
+      todo: convertedTasks.filter((task: Task) => task.status === Status.TODO),
+      inprogress: convertedTasks.filter((task: Task) => task.status === Status.IN_PROGRESS),
+      done: convertedTasks.filter((task: Task) => task.status === Status.DONE),
     };
 
     return { columns, error: null };
@@ -167,15 +200,13 @@ export async function deleteTask(taskId: string): Promise<ActionResponse> {
 export async function reorderTasks(taskId: string, sourceStatus: Status, destinationStatus: Status, newOrder: number): Promise<ActionResponse> {
   try {
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      // Dapatkan semua tugas di kolom tujuan
       const tasksInDestination = await tx.task.findMany({
         where: { status: destinationStatus },
         orderBy: { order: "asc" },
       });
 
-      // Jika berpindah dalam kolom yang sama
       if (sourceStatus === destinationStatus) {
-        const task = tasksInDestination.find((t: Task) => t.id === taskId);
+        const task = tasksInDestination.find((t: PrismaTask) => t.id === taskId);
         const oldOrder = task?.order || 0;
 
         if (newOrder > oldOrder) {
@@ -196,8 +227,6 @@ export async function reorderTasks(taskId: string, sourceStatus: Status, destina
           });
         }
       } else {
-        // Pindah ke kolom yang berbeda
-        // Kurangi urutan di kolom sumber
         await tx.task.updateMany({
           where: {
             status: sourceStatus,
@@ -206,7 +235,6 @@ export async function reorderTasks(taskId: string, sourceStatus: Status, destina
           data: { order: { decrement: 1 } },
         });
 
-        // Tambah urutan di kolom tujuan
         await tx.task.updateMany({
           where: {
             status: destinationStatus,
@@ -216,7 +244,6 @@ export async function reorderTasks(taskId: string, sourceStatus: Status, destina
         });
       }
 
-      // Update tugas yang dipindahkan
       await tx.task.update({
         where: { id: taskId },
         data: {
