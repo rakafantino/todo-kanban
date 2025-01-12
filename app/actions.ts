@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { Status } from "@/types/task";
+import { Status, Task } from "@/types/task";
 import { Prisma } from "@prisma/client";
 
 interface ActionResponse {
