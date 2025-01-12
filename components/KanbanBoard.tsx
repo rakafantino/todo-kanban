@@ -32,7 +32,7 @@ export default function KanbanBoard() {
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [loadTasks]);
 
   const loadTasks = useCallback(async () => {
     try {

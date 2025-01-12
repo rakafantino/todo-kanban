@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, { params }: { params: { id: string } }) {
   try {
     const task = await prisma.task.findUnique({
       where: {
@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
     return NextResponse.json(task);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: "Failed to fetch task" }, { status: 500 });
   }
 }

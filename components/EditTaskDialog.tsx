@@ -33,7 +33,7 @@ export function EditTaskDialog({ task, trigger, onTaskUpdated }: EditTaskDialogP
 
   useEffect(() => {
     loadLabels();
-  }, []);
+  }, [loadLabels]);
 
   const loadLabels = async () => {
     const { labels: fetchedLabels, error } = await getLabels();

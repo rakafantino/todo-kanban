@@ -21,7 +21,7 @@ interface TaskFormProps {
 export default function TaskForm({ onSubmit, task, submitText = "Create Task" }: TaskFormProps) {
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
-  const [priority, setPriority] = useState(task?.priority || 4);
+  const [priority] = useState(task?.priority || 4);
   const [selectedLabels, setSelectedLabels] = useState<string[]>(task?.labels.map((l) => l.id) || []);
   const [dueDate, setDueDate] = useState<Date | undefined>(task?.dueDate ? new Date(task.dueDate) : undefined);
 
